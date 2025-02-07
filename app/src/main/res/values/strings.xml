@@ -1,4 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CPad downloader</string>
+    <string name="app_name" translatable="false">CPad Downloader</string>
+
+    <!-- ログイン画面 -->
+    <string name="member_id">会員番号 (10桁)</string>
+    <string name="member_pw">パスワード (8~16字)</string>
+    <string name="login">ログイン</string>
+
+    <!-- XMLダウンロード -->
+    <string name="please_wait">しばらくお待ちください…</string>
+
+    <!-- メインレイアウト -->
+    <string name="select_fw">ファームウェア選択</string>
+    <string name="select_apk">APKファイル選択</string>
+    <string name="download">ダウンロード</string>
+
+    <string name="txt" translatable="false">TXT</string>
+    <string name="zip" translatable="false">ZIP</string>
+
+    <!-- Java -->
+    <string name="permission_error">権限エラー</string>
+    <string name="deny_error_message">ストレージ権限は必須です</string>
+    <string name="exit_app">アプリを終了</string>
+    <string name="permission_granted">権限が許可されました</string>
+
+<!--
+    <string name=""></string>
+-->
 </resources>

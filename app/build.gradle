@@ -3,16 +3,15 @@ plugins {
 }
 
 android {
-    namespace 'com.coara.fwdownloader' 
-    compileSdk 35
+    namespace = 'com.coara.fwdownloader' 
+    compileSdk = 35
     
     defaultConfig {
-        applicationId "com.coara.fwdownloader"
-        minSdk 21
-        targetSdk 24
-        versionCode 44
-        versionName "3.3"
-        multiDexEnabled true
+        minSdk = 21
+        targetSdk = 24
+        versionCode = 44
+        versionName = "3.3"
+        multiDexEnabled = true
         proguardFiles += 'proguard-rules.pro'
     }
 
@@ -32,12 +31,12 @@ android {
 
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
+            signingConfig = signingConfigs.debug
         }
         release {
-            signingConfig signingConfigs.release
-            minifyEnabled true
-            shrinkResources true
+            signingConfig = signingConfigs.release
+            minifyEnabled = true
+            shrinkResources = true
         }
     }
 
@@ -63,7 +62,4 @@ android {
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
-}
-
-dependencies {
 }

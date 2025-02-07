@@ -1,0 +1,17 @@
+# Gradle
+/.gradle/
+# Android SDK
+/local.properties
+# IntelliJ
+/.idea/
+# Gradle Build
+/app/build/
+# AGP Lint
+/build/
+# Android Studio Signing APK
+/app/debug/
+/app/release/
+# VS Code
+/.vscode/
+# Nano
+*.save

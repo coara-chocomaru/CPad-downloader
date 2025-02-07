@@ -24,21 +24,21 @@
                 android:id="@+id/memberId"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="会員番号 (10桁)"
+                android:hint="@string/member_id"
                 android:inputType="number" />
 
             <EditText
                 android:id="@+id/password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="パスワード (8～16文字)"
+                android:hint="@string/member_pw"
                 android:inputType="textPassword" />
 
             <Button
                 android:id="@+id/loginButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="ログイン" />
+                android:text="@string/login" />
         </LinearLayout>
 
         <!-- メイン用レイアウト（ログイン成功後に表示） -->
@@ -56,7 +56,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="ファームウェア選択" />
+                android:text="@string/select_fw" />
 
             <!-- 【追加】APKファイル選択ボタン（ファームウェア選択ボタンの下） -->
             <Button
@@ -64,7 +64,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="APKファイル選択" />
+                android:text="@string/select_apk" />
 
             <!-- ファーム一覧表示用 ListView -->
             <ListView
@@ -81,7 +81,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="ダウンロード" />
+                android:text="@string/download" />
 
             <!-- ZIP・TXTボタンを横並びで配置 -->
             <LinearLayout
@@ -97,7 +97,7 @@
                     android:layout_width="0dp"
                     android:layout_height="32dp"
                     android:layout_weight="1"
-                    android:text="ZIP"
+                    android:text="@string/zip"
                     android:textSize="12sp"
                     android:padding="4dp"
                     android:background="@android:color/darker_gray"
@@ -112,7 +112,7 @@
                     android:layout_width="0dp"
                     android:layout_height="32dp"
                     android:layout_weight="1"
-                    android:text="TXT"
+                    android:text="@string/txt"
                     android:textSize="12sp"
                     android:padding="4dp"
                     android:background="@android:color/darker_gray"

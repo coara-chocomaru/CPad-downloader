@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
@@ -22,10 +22,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 21
-          
-      - name: chmod +x
-        run: chmod +x ./gradlew
-        
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
@@ -42,10 +39,10 @@ jobs:
       - name: Show set variables
         run: |
           echo "name=${{ env.repo }}-${{ env.version }}-${{ env.commit }}-${{ env.timestamp }}" >> $GITHUB_ENV
-          echo -e "version=${{ env.version }}"
-          echo -e "commit=${{ env.commit }}"
-          echo -e "repo=${{ env.repo }}"
-          echo -e "timestamp=${{ env.timestamp }}"
+          echo "version=${{ env.version }}"
+          echo "commit=${{ env.commit }}"
+          echo "repo=${{ env.repo }}"
+          echo "timestamp=${{ env.timestamp }}"
 
       - name: Build
         run: |
