@@ -31,7 +31,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
- 
+
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -70,7 +70,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
- 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -78,9 +77,9 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
- 
+
 public class MainActivity extends Activity {
- 
+
     private static final String TAG = "MainActivity";
     private static final int REQUEST_STORAGE_PERMISSION = 100;
     private static final String PREFS_NAME = "MyPrefs";
@@ -90,25 +89,25 @@ public class MainActivity extends Activity {
     // ログイン用、メイン用レイアウト
     private View loginLayout;
     private View mainLayout;
- 
+
     // ログイン用 UI
     private EditText memberIdInput, passwordInput;
     private Button loginButton;
-  
+
     private Button downloadButton;
     private Button firmwareSelectionButton;
     private Button switchExecuteButton;
     private ListView firmwareListView;
- 
+
     // セッション／Token 管理
     private String akamaiToken = "";
     // ファーム一覧取得時に利用するベースURL（例："https://townak.benesse.ne.jp/{akamaiType}/{akamaiTable}/sp_84"）
     private String firmwareBaseUrl = "";
-    
+
     private final List<String> firmwareList = new ArrayList<>();
     // UI 更新用
     private final Handler handler = new Handler(Looper.getMainLooper());
- 
+
     // 選択されたファーム情報（ダウンロード時に利用）
     private String selectedFirmwareInfo = "";
     private Button apkSelectionButton;
@@ -124,14 +123,12 @@ public class MainActivity extends Activity {
             initApp();
         }
     }
- 
- 
+
     @Override
-    @SuppressWarnings("deprecation")
+    @Deprecated
     public void onBackPressed() {
-    
     }
- 
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == REQUEST_STORAGE_PERMISSION) {
@@ -140,12 +137,12 @@ public class MainActivity extends Activity {
                 initApp();
             } else {
                 new AlertDialog.Builder(this)
-                        .setTitle("権限エラー")
-                        .setMessage("ストレージ権限が許可されないと動作しません。アプリを終了します。")
-                        .setPositiveButton("終了", new DialogInterface.OnClickListener() {
+                        .setTitle(R.string.permission_error)
+                        .setMessage(R.string.deny_error_message)
+                        .setPositiveButton(R.string.exit_app, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                finish();
+                                finishAndRemoveTask();
                             }
                         })
                         .setCancelable(false)
@@ -156,248 +153,242 @@ public class MainActivity extends Activity {
         }
     }
 
-
- 
     private void showPermissionToastOnce() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         boolean shown = prefs.getBoolean(KEY_PERMISSION_SHOWN, false);
         if (!shown) {
-            Toast.makeText(this, "権限が許可されました", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.permission_granted, Toast.LENGTH_SHORT).show();
             prefs.edit().putBoolean(KEY_PERMISSION_SHOWN, true).apply();
         }
     }
- 
-    
-   
-private void initApp() {
-    CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
-    CookieHandler.setDefault(cookieManager);
-    setContentView(R.layout.activity_main);
 
-    
-    loginLayout = findViewById(R.id.loginLayout);
-    mainLayout = findViewById(R.id.mainLayout);
+    private void initApp() {
+        CookieManager cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+        CookieHandler.setDefault(cookieManager);
+        setContentView(R.layout.activity_main);
 
-    
-    memberIdInput = findViewById(R.id.memberId);
-    passwordInput = findViewById(R.id.password);
-    loginButton = findViewById(R.id.loginButton);
-    firmwareListView = findViewById(R.id.firmwareListView);
-    downloadButton = findViewById(R.id.downloadButton);
-    firmwareSelectionButton = findViewById(R.id.firmwareSelectionButton);
-    apkSelectionButton = findViewById(R.id.apkSelectionButton);
-    Button zipButton = findViewById(R.id.zipButton);
-    Button txtButton = findViewById(R.id.txtButton);
+        loginLayout = findViewById(R.id.loginLayout);
+        mainLayout = findViewById(R.id.mainLayout);
 
-    // 初期状態はログイン用のみ表示
-    loginLayout.setVisibility(View.VISIBLE);
-    mainLayout.setVisibility(View.GONE);
+        memberIdInput = findViewById(R.id.memberId);
+        passwordInput = findViewById(R.id.password);
+        loginButton = findViewById(R.id.loginButton);
+        firmwareListView = findViewById(R.id.firmwareListView);
+        downloadButton = findViewById(R.id.downloadButton);
+        firmwareSelectionButton = findViewById(R.id.firmwareSelectionButton);
+        apkSelectionButton = findViewById(R.id.apkSelectionButton);
+        Button zipButton = findViewById(R.id.zipButton);
+        Button txtButton = findViewById(R.id.txtButton);
 
-    if (loadLoginInfo()) {
-        loginButton.performClick(); 
-    }
+        // 初期状態はログイン用のみ表示
+        loginLayout.setVisibility(View.VISIBLE);
+        mainLayout.setVisibility(View.GONE);
 
-    // ログインボタンの処理
-    loginButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            String memberId = memberIdInput.getText().toString().trim();
-            String password = passwordInput.getText().toString().trim();
-            if (memberId.length() != 10) {
-                Toast.makeText(MainActivity.this, "会員番号は10桁で入力してください", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (password.length() < 8 || password.length() > 16) {
-                Toast.makeText(MainActivity.this, "パスワードは8～16文字で入力してください", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            doLogin(memberId, password);
+        if (loadLoginInfo()) {
+            loginButton.performClick();
         }
-    });
 
-    // APK選択ボタンの処理
-    apkSelectionButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            showApkSelectionDialog();
-        }
-    });
-
-    // ファームウェア一覧リストビューの項目選択処理
-    firmwareListView.setOnItemClickListener((parent, view, position, id) -> {
-        selectedFirmwareInfo = firmwareList.get(position);
-        Toast.makeText(MainActivity.this, "選択: " + selectedFirmwareInfo, Toast.LENGTH_SHORT).show();
-    });
-
-    // ダウンロードボタンの処理
-    downloadButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (selectedFirmwareInfo.isEmpty()) {
-                Toast.makeText(MainActivity.this, "ファームを選択してください", Toast.LENGTH_SHORT).show();
-            } else {
-                downloadFirmware(selectedFirmwareInfo);
-            }
-        }
-    });
-
-    // ファームウェア選択ボタンの処理
-    firmwareSelectionButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            showFirmwareModelSelectionDialog();
-        }
-    });
-
-    // ZIPファイルボタンの処理
-    zipButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            showFileListByExtension(".zip");
-        }
-    });
-
-    // TXTファイルボタンの処理
-    txtButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            showFileListByExtension(".txt");
-        }
-    });
-
-    ViewGroup parentLayout = (ViewGroup) zipButton.getParent();
-    Button switchExecuteButton = new Button(this);
-    switchExecuteButton.setText("切り替え実行");
-    parentLayout.addView(switchExecuteButton);
-
-    switchExecuteButton.setOnClickListener(v -> showSelectionDialog());
-}
-    private void showSelectionDialog() {
-    String[][] options = {
-        {"test A", "test", "A"},
-        {"test B", "test", "B"},
-        {"test2 A", "test2", "A"},
-        {"test2 B", "test2", "B"},
-        {"test3 A", "test3", "A"},
-        {"test3 B", "test3", "B"},
-        {"test4 A", "test4", "A"},
-        {"test4 B", "test4", "B"},
-        {"rel A", "rel", "A"},
-        {"rel B", "rel", "B"},
-        {"rel2 A", "rel2", "A"},
-        {"rel2 B", "rel2", "B"},
-        {"dev A", "dev", "A"},
-        {"dev B", "dev", "B"}
-    };
-
-    String[] optionNames = new String[options.length];
-    for (int i = 0; i < options.length; i++) {
-        optionNames[i] = options[i][0];
-    }
-
-    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setTitle("選択してください");
-    // 既に選択された項目があれば、そのインデックスを初期値として渡す
-    builder.setSingleChoiceItems(optionNames, selectedOptionIndex, new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            // 選択状態を更新
-            selectedOptionIndex = which;
-        }
-    });
-
-    builder.setPositiveButton("実行", new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            // 選択された項目に基づいて処理を実行
-            if (selectedOptionIndex != -1) {
-                String akamaiType = options[selectedOptionIndex][1];
-                String akamaiTable = options[selectedOptionIndex][2];
-                fetchFirmwareList2(akamaiType, akamaiTable, "7", "B");
-            }
-
-            Toast.makeText(MainActivity.this, "切り替えました", Toast.LENGTH_SHORT).show();
-
-            // ListView のタッチ操作を一時的に無効化
-            final ListView firmwareListView = findViewById(R.id.firmwareListView);
-            if (firmwareListView != null) {
-                firmwareListView.setEnabled(false);
-            }
-
-            // 1秒後に ListView を空にし、タッチを再度有効化
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    clearListView();
-                    if (firmwareListView != null) {
-                        firmwareListView.setEnabled(true);
-                    }
+        // ログインボタンの処理
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String memberId = memberIdInput.getText().toString().trim();
+                String password = passwordInput.getText().toString().trim();
+                if (memberId.length() != 10) {
+                    Toast.makeText(MainActivity.this, "会員番号は10桁で入力してください", Toast.LENGTH_SHORT).show();
+                    return;
                 }
-            }, 1000);
+                if (password.length() < 8 || password.length() > 16) {
+                    Toast.makeText(MainActivity.this, "パスワードは8～16文字で入力してください", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                doLogin(memberId, password);
+            }
+        });
+
+        // APK選択ボタンの処理
+        apkSelectionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showApkSelectionDialog();
+            }
+        });
+
+        // ファームウェア一覧リストビューの項目選択処理
+        firmwareListView.setOnItemClickListener((parent, view, position, id) -> {
+            selectedFirmwareInfo = firmwareList.get(position);
+            Toast.makeText(MainActivity.this, "選択: " + selectedFirmwareInfo, Toast.LENGTH_SHORT).show();
+         });
+
+        // ダウンロードボタンの処理
+        downloadButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (selectedFirmwareInfo.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "ファームを選択してください", Toast.LENGTH_SHORT).show();
+                } else {
+                    downloadFirmware(selectedFirmwareInfo);
+                }
+            }
+        });
+
+        // ファームウェア選択ボタンの処理
+        firmwareSelectionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showFirmwareModelSelectionDialog();
+            }
+        });
+
+        // ZIPファイルボタンの処理
+        zipButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showFileListByExtension(".zip");
+            }
+        });
+
+        // TXTファイルボタンの処理
+        txtButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showFileListByExtension(".txt");
+            }
+        });
+
+        ViewGroup parentLayout = (ViewGroup) zipButton.getParent();
+        Button switchExecuteButton = new Button(this);
+        switchExecuteButton.setText("切り替え実行");
+        parentLayout.addView(switchExecuteButton);
+
+        switchExecuteButton.setOnClickListener(v -> showSelectionDialog());
+    }
+
+    private void showSelectionDialog() {
+        String[][] options = {
+            {"test A", "test", "A"},
+            {"test B", "test", "B"},
+            {"test2 A", "test2", "A"},
+            {"test2 B", "test2", "B"},
+            {"test3 A", "test3", "A"},
+            {"test3 B", "test3", "B"},
+            {"test4 A", "test4", "A"},
+            {"test4 B", "test4", "B"},
+            {"rel A", "rel", "A"},
+            {"rel B", "rel", "B"},
+            {"rel2 A", "rel2", "A"},
+            {"rel2 B", "rel2", "B"},
+            {"dev A", "dev", "A"},
+            {"dev B", "dev", "B"}
+        };
+
+        String[] optionNames = new String[options.length];
+        for (int i = 0; i < options.length; i++) {
+            optionNames[i] = options[i][0];
         }
-    });
 
-    builder.setNegativeButton("キャンセル", null);
-    builder.show();
-}
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("選択してください");
+        // 既に選択された項目があれば、そのインデックスを初期値として渡す
+        builder.setSingleChoiceItems(optionNames, selectedOptionIndex, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // 選択状態を更新
+                selectedOptionIndex = which;
+            }
+        });
 
-   private void fetchFirmwareList2(String akamaiType, String akamaiTable, String akamaiListParam, String akamaiInfo) {
+        builder.setPositiveButton("実行", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // 選択された項目に基づいて処理を実行
+                if (selectedOptionIndex != -1) {
+                    String akamaiType = options[selectedOptionIndex][1];
+                    String akamaiTable = options[selectedOptionIndex][2];
+                    fetchFirmwareList2(akamaiType, akamaiTable, "7", "B");
+                }
+
+                Toast.makeText(MainActivity.this, "切り替えました", Toast.LENGTH_SHORT).show();
+
+                // ListView のタッチ操作を一時的に無効化
+                final ListView firmwareListView = findViewById(R.id.firmwareListView);
+                if (firmwareListView != null) {
+                    firmwareListView.setEnabled(false);
+                }
+
+                // 1秒後に ListView を空にし、タッチを再度有効化
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        clearListView();
+                        if (firmwareListView != null) {
+                            firmwareListView.setEnabled(true);
+                        }
+                    }
+                }, 1000);
+            }
+        });
+
+        builder.setNegativeButton("キャンセル", null);
+        builder.show();
+    }
+
+    private void fetchFirmwareList2(String akamaiType, String akamaiTable, String akamaiListParam, String akamaiInfo) {
         new Thread(() -> {
-           try {
-            // URL を生成
-            firmwareBaseUrl = "https://townak.benesse.ne.jp/" + akamaiType + "/" + akamaiTable + "/sp_84";
-            String firmwareXmlUrl = firmwareBaseUrl + "/authorized/list/200" + akamaiListParam +
+            try {
+                // URL を生成
+                firmwareBaseUrl = "https://townak.benesse.ne.jp/" + akamaiType + "/" + akamaiTable + "/sp_84";
+                String firmwareXmlUrl = firmwareBaseUrl + "/authorized/list/200" + akamaiListParam +
                     "/deliveryInfo_APL000" + akamaiInfo + ".xml";
 
-            Log.d("FirmwareFetch", "Firmware XML URL: " + firmwareXmlUrl);
+                Log.d("FirmwareFetch", "Firmware XML URL: " + firmwareXmlUrl);
 
-          
-            URL url = new URL(firmwareXmlUrl);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("Content-Type", "application/xml");
+                URL url = new URL(firmwareXmlUrl);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Content-Type", "application/xml");
 
-            // Cookie を付加（トークンがある場合）
-            if (akamaiToken != null && !akamaiToken.isEmpty()) {
-                conn.setRequestProperty("Cookie", "town_akamai_token=" + akamaiToken);
-            }
-
-            // データ取得
-            byte[] xmlBytes = readAllBytes(conn.getInputStream());
-            String utf8Content = new String(xmlBytes, StandardCharsets.UTF_8);
-            Log.d("FirmwareFetch", "Firmware XML: " + utf8Content);
-
-            // XML パース
-            List<String> list = parseFirmwareXml(utf8Content);
-
-            // firmwareListの更新（UIスレッドで更新する）
-            runOnUiThread(() -> {
-                synchronized (firmwareList) {
-                    firmwareList.clear();
-                    firmwareList.addAll(list);
+                // Cookie を付加（トークンがある場合）
+                if (akamaiToken != null && !akamaiToken.isEmpty()) {
+                    conn.setRequestProperty("Cookie", "town_akamai_token=" + akamaiToken);
                 }
-            });
 
-            conn.disconnect();
-        } catch (Exception e) {
-            Log.e("FirmwareFetch", "エラー発生", e);
-        }
-    }).start();
-}
+                // データ取得
+                byte[] xmlBytes = readAllBytes(conn.getInputStream());
+                String utf8Content = new String(xmlBytes, StandardCharsets.UTF_8);
+                Log.d("FirmwareFetch", "Firmware XML: " + utf8Content);
+
+                // XML パース
+                List<String> list = parseFirmwareXml(utf8Content);
+
+                // firmwareListの更新（UIスレッドで更新する）
+                runOnUiThread(() -> {
+                    synchronized (firmwareList) {
+                        firmwareList.clear();
+                        firmwareList.addAll(list);
+                    }
+                });
+
+                conn.disconnect();
+            } catch (Exception e) {
+                Log.e("FirmwareFetch", "エラー発生", e);
+            }
+        }).start();
+    }
 
     private void clearListView() {
-    // ListViewの内容を空にする
-    runOnUiThread(() -> {
-        ListView firmwareListView = findViewById(R.id.firmwareListView);
-        if (firmwareListView != null) {
-            ArrayAdapter<String> adapter = (ArrayAdapter<String>) firmwareListView.getAdapter();
-            if (adapter != null) {
-                adapter.clear(); // 直接データリストを空にする
-                adapter.notifyDataSetChanged(); // 変更を反映させる
+        // ListViewの内容を空にする
+        runOnUiThread(() -> {
+            ListView firmwareListView = findViewById(R.id.firmwareListView);
+            if (firmwareListView != null) {
+                ArrayAdapter<String> adapter = (ArrayAdapter<String>) firmwareListView.getAdapter();
+                if (adapter != null) {
+                    adapter.clear(); // 直接データリストを空にする
+                    adapter.notifyDataSetChanged(); // 変更を反映させる
+                }
             }
-        }
-    });
-}
+        });
+    }
 
     // ログイン処理
     private void doLogin(String memberId, String password) {
