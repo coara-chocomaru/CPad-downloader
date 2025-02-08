@@ -184,10 +184,6 @@ public class MainActivity extends Activity {
         loginLayout.setVisibility(View.VISIBLE);
         mainLayout.setVisibility(View.GONE);
 
-        if (loadLoginInfo()) {
-            loginButton.performClick();
-        }
-
         // ログインボタンの処理
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -204,7 +200,11 @@ public class MainActivity extends Activity {
                 }
                 doLogin(memberId, password);
             }
-        });
+        });      
+      
+        if (loadLoginInfo()) {
+            loginButton.performClick();
+        }
 
         // APK選択ボタンの処理
         apkSelectionButton.setOnClickListener(new View.OnClickListener() {
@@ -478,9 +478,11 @@ public class MainActivity extends Activity {
         String memberId = reader.readLine();
         String password = reader.readLine();
         if (memberId != null && password != null) {
-            memberIdInput.setText(memberId);
-            passwordInput.setText(password);
-            return true;
+            runOnUiThread(() -> {
+                memberIdInput.setText(memberId);
+                passwordInput.setText(password);
+            });
+            return true; 
         }
     } catch (IOException e) {
         // ファイルが存在しない場合は無視

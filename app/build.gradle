@@ -9,8 +9,8 @@ android {
     defaultConfig {
         minSdk = 21
         targetSdk = 24
-        versionCode = 44
-        versionName = "3.3"
+        versionCode = 45
+        versionName = "3.4"
         multiDexEnabled = true
         proguardFiles += 'proguard-rules.pro'
     }
