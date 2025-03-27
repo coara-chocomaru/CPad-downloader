@@ -540,27 +540,52 @@ public class MainActivity extends Activity {
                             final String xmlUrlStr = baseUrl + "/authorized/list/200" + listParam +
                                     "/deliveryInfo_APL000" + info + ".xml";
                             futures.add(executor.submit(new Callable<Void>() {
-                                @Override
-                                public Void call() {
-                                    try {
-                                        URL url = new URL(xmlUrlStr);
-                                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                                        conn.setRequestMethod("GET");
-                                        conn.setRequestProperty("Content-Type", "application/xml");
-                                        if (!akamaiToken.isEmpty()) {
-                                            conn.setRequestProperty("Cookie", "town_akamai_token=" + akamaiToken);
-                                        }
-                                        byte[] xmlBytes = readAllBytes(conn.getInputStream());
-                                        String utf8Content = new String(xmlBytes, StandardCharsets.UTF_8);
-                                        Document doc = builder.parse(new ByteArrayInputStream(utf8Content.getBytes(StandardCharsets.UTF_8)));
-                                        NodeList appNodes = doc.getElementsByTagName("application");
-                                        synchronized (mergedDoc) {
-                                            for (int i = 0; i < appNodes.getLength(); i++) {
-                                                Node node = appNodes.item(i);
-                                                Node importedNode = mergedDoc.importNode(node, true);
-                                                root.appendChild(importedNode);
-                                            }
-                                        }
+    　　　　　　　　　　　　　　　　　　　@Override
+                             public Void call() {
+                             try {
+                             URL url = new URL(xmlUrlStr);
+                             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                             conn.setRequestMethod("GET");
+                             conn.setRequestProperty("Content-Type", "application/xml");
+                         if (!akamaiToken.isEmpty()) {
+                             conn.setRequestProperty("Cookie", "town_akamai_token=" + akamaiToken);
+                             }
+            byte[] xmlBytes = readAllBytes(conn.getInputStream());
+            String utf8Content = new String(xmlBytes, StandardCharsets.UTF_8);
+            Document doc = builder.parse(new ByteArrayInputStream(utf8Content.getBytes(StandardCharsets.UTF_8)));
+            NodeList appNodes = doc.getElementsByTagName("application");
+            synchronized (mergedDoc) {
+                for (int i = 0; i < appNodes.getLength(); i++) {
+                    Node node = appNodes.item(i);
+                    Node importedNode = mergedDoc.importNode(node, true);
+                    root.appendChild(importedNode);
+                }
+            }
+            conn.disconnect();
+        } catch (Exception e) {
+            if (!xmlUrlStr.toLowerCase().endsWith(".xml")) {
+                synchronized(mergedDoc) {
+                    Element appElem = mergedDoc.createElement("application");
+                    
+                    Element pathElem = mergedDoc.createElement("path");
+                    pathElem.setTextContent(xmlUrlStr);
+                    appElem.appendChild(pathElem);
+                    
+                    Element downloadUrlElem = mergedDoc.createElement("downloadUrl");
+                    downloadUrlElem.setTextContent(xmlUrlStr);
+                    appElem.appendChild(downloadUrlElem);
+                    
+                    Element appIdElem = mergedDoc.createElement("appId");
+                    appIdElem.setTextContent("NonXML");
+                    appElem.appendChild(appIdElem);
+                    
+                    Element appDispNameElem = mergedDoc.createElement("appDispName");
+                    appDispNameElem.setTextContent("Non XML File");
+                    appElem.appendChild(appDispNameElem);
+                    
+                    root.appendChild(appElem);
+                }
+            }
                                         conn.disconnect();
                                     } catch (Exception e) {
                                     }
