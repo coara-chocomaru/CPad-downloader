@@ -80,7 +80,6 @@ public class MainActivity extends Activity {
     private static final String PREFS_NAME = "MyPrefs";
     private static final String KEY_PERMISSION_SHOWN = "permission_shown";
     private int selectedOptionIndex = -1;
-    private static final ExecutorService executor = Executors.newCachedThreadPool();
     private static final ExecutorService executor = Executors.newFixedThreadPool(8);
     private static final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
     private View loginLayout;
