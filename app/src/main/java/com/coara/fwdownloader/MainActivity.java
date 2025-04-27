@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
     private static final String PREFS_NAME = "MyPrefs";
     private static final String KEY_PERMISSION_SHOWN = "permission_shown";
     private int selectedOptionIndex = -1;
-    private static final ExecutorService executor = Executors.newFixedThreadPool(8);
+    private static final ExecutorService executor = Executors.newCachedThreadPool();
     private static final DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
     private View loginLayout;
     private View mainLayout;
@@ -527,10 +527,10 @@ public class MainActivity extends Activity {
             final Document mergedDoc = builder.newDocument();
             Element root = mergedDoc.createElement("allDeliveryInfo");
             mergedDoc.appendChild(root);
-            String[] akamaiTypes = {"rel", "rel2", "test", "test2", "test3", "test4", "dev"};
+            String[] akamaiTypes = {"rel", "rel2", "test", "test2", "test3", "test4"};
             String[] tables = {"A", "B"};
-            String[] listParams = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-            String[] infoArray = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"};
+            String[] listParams = {"2", "3", "4", "5", "6", "7", "8", "9"};
+            String[] infoArray = {"A", "B", "C", "D", "H"};
             for (String table : tables) {
                 List<Future<Void>> futures = new ArrayList<>();
                 for (String type : akamaiTypes) {
